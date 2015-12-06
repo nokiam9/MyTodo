@@ -32,6 +32,8 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         TodoModel(id: "2", image: "phone-selected", title: "2. Phone Call", date: dateFromString("2015-11-12")!),
         TodoModel(id: "3", image: "shopping-cart-selected", title: "3. Shopping Center", date: dateFromString("2015-11-13")!),
         TodoModel(id: "4", image: "travel-selected", title: "4. Travel to Europe", date: dateFromString("2015-12-12")!)]
+        
+        navigationItem.leftBarButtonItem = editButtonItem()
     }
 
     override func didReceiveMemoryWarning() {
@@ -68,6 +70,24 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         date.text = dateFormat.stringFromDate(todo.date)
      
         return cell
+    }
+    
+
+    func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
+        if editingStyle == UITableViewCellEditingStyle.Delete {
+            todos.removeAtIndex(indexPath.row)
+            tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
+        }
+    }
+    
+    override func setEditing(editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        self.tableView.setEditing(editing, animated: animated)
+    }
+    
+    @IBAction func vclose(segue:UIStoryboardSegue) {
+        NSLog("View will be closed!")
+        tableView.reloadData()
     }
 }
 

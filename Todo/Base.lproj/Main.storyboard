@@ -5,7 +5,7 @@
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9049"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
+        <!--待办列表-->
         <scene sceneID="tne-QT-ifu">
             <objects>
                 <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="Todo" customModuleProvider="target" sceneMemberID="viewController">
@@ -54,14 +54,46 @@
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     </view>
-                    <navigationItem key="navigationItem" id="gqV-Ki-Me7"/>
+                    <navigationItem key="navigationItem" title="待办列表" id="gqV-Ki-Me7">
+                        <barButtonItem key="rightBarButtonItem" title="新增" id="WZI-ED-yaP">
+                            <connections>
+                                <segue destination="Fg7-AF-Oox" kind="push" id="haO-Bl-YmW"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="tableView" destination="3mr-Ur-kMr" id="XJQ-an-OIp"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="552" y="318"/>
+            <point key="canvasLocation" x="372" y="357"/>
+        </scene>
+        <!--Detail View Controller-->
+        <scene sceneID="LVP-S0-Tkf">
+            <objects>
+                <viewController id="Fg7-AF-Oox" customClass="DetailViewController" customModule="Todo" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="eVo-AY-t9N">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="RSy-g6-qDm">
+                                <rect key="frame" x="145" y="461" width="30" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="确定"/>
+                                <connections>
+                                    <segue destination="ACg-vz-ixs" kind="unwind" unwindAction="vclose:" id="rAG-jC-y3E"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="a6y-uH-EMe"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ydL-Ad-grn" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <exit id="ACg-vz-ixs" userLabel="Exit" sceneMemberID="exit"/>
+            </objects>
+            <point key="canvasLocation" x="766" y="357"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="ei8-K0-T7C">
@@ -79,7 +111,7 @@
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="1xY-iC-l2m" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="85" y="406"/>
+            <point key="canvasLocation" x="-47" y="357"/>
         </scene>
     </scenes>
     <resources>
