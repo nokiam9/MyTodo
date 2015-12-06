@@ -14,7 +14,7 @@ var todos:[TodoModel] = []
 // 自定义的一个方法，将指定格式的字符串转化为NSDate类型，为了初始化时给todos赋值方便
 func dateFromString(dateStr: String) -> NSDate? {
     let dateFormat = NSDateFormatter()
-    dateFormat.dateFormat = "yyyy-mm-dd"
+    dateFormat.dateFormat = "yyyy-MM-dd"
     
     return dateFormat.dateFromString(dateStr)
 }
@@ -33,6 +33,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         TodoModel(id: "3", image: "shopping-cart-selected", title: "3. Shopping Center", date: dateFromString("2015-11-13")!),
         TodoModel(id: "4", image: "travel-selected", title: "4. Travel to Europe", date: dateFromString("2015-12-12")!)]
         
+        // 注意：这里设置了导航条左侧按钮为默认的Edit方式
         navigationItem.leftBarButtonItem = editButtonItem()
     }
 
@@ -66,13 +67,13 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         
         // 根据终端的locale参数，设置相应的日期显示方式
         let dateFormat = NSDateFormatter()
-        dateFormat.dateFormat = NSDateFormatter.dateFormatFromTemplate("yyyy-mm-dd", options: 0, locale: NSLocale.currentLocale())
+        dateFormat.dateFormat = NSDateFormatter.dateFormatFromTemplate("yyyy-MM-dd", options: 0, locale: NSLocale.currentLocale())
         date.text = dateFormat.stringFromDate(todo.date)
      
         return cell
     }
     
-
+    // 设置删除的方法，并设置了其动画效果
     func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
         if editingStyle == UITableViewCellEditingStyle.Delete {
             todos.removeAtIndex(indexPath.row)
@@ -80,14 +81,28 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         }
     }
     
+    // 设置了Editing的方法，注意要结合viewDidLoad中设置导航条的左侧按钮才能生效
     override func setEditing(editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
         self.tableView.setEditing(editing, animated: animated)
     }
     
-    @IBAction func vclose(segue:UIStoryboardSegue) {
+    // 设置了DetailViewController中的按钮返回方法，注意：必须在故事板中进行手工segue的绑定
+    @IBAction func xclose(segue:UIStoryboardSegue) {
         NSLog("View will be closed!")
         tableView.reloadData()
     }
+    
+    /*
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if segue.identifier == "TodoEdit" {
+            let vc = segue.destinationViewController as! DetailViewController
+            let indexPath = tableView.indexPathForSelectedRow
+            if let index = indexPath {
+                vc.todo = todos[index.row]
+            }
+        }
+    }
+    */
 }
 
