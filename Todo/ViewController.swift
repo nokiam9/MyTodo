@@ -8,7 +8,7 @@
 
 import UIKit
 
-// 定义了全局变量todos，也就是本APP需要的运行数据库，是一个TodoModel的数组
+// 定义了全局变量todos，也就是本APP需要的运行数据库，是一个TodoModel的class数组
 var todos:[TodoModel] = []
 
 // 自定义的一个方法，将指定格式的字符串转化为NSDate类型，为了初始化时给todos赋值方便
@@ -27,7 +27,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        // 给todos数据库设置初始数据
+        // 给todos数据库设置初值，注意：todos是class，设置的方式实际上是调用init()，而非变量赋初值，因此只能在初始化函数中进行，而非头文件
         todos = [TodoModel(id: "1", image: "child-selected", title: "1. Go to Zone", date: dateFromString("2015-11-11")!),
         TodoModel(id: "2", image: "phone-selected", title: "2. Phone Call", date: dateFromString("2015-11-12")!),
         TodoModel(id: "3", image: "shopping-cart-selected", title: "3. Shopping Center", date: dateFromString("2015-11-13")!),
@@ -73,7 +73,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         return cell
     }
     
-    // 设置删除的方法，并设置了其动画效果
+    // 设置删除模式，并设置了其动画效果
     func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
         if editingStyle == UITableViewCellEditingStyle.Delete {
             todos.removeAtIndex(indexPath.row)
@@ -81,10 +81,20 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         }
     }
     
-    // 设置了Editing的方法，注意要结合viewDidLoad中设置导航条的左侧按钮才能生效
+    // 设置编辑模式，注意要结合viewDidLoad中设置导航条的左侧按钮才能生效
     override func setEditing(editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
-        self.tableView.setEditing(editing, animated: animated)
+        self.tableView.setEditing(editing, animated: true)
+    }
+    
+    // 设置移动模式，返回设置为只有在editing模式下才允许移动item
+    func tableView(tableView: UITableView, canMoveRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        return editing
+    }
+    
+    func tableView(tableView: UITableView, moveRowAtIndexPath sourceIndexPath: NSIndexPath, toIndexPath destinationIndexPath: NSIndexPath) {
+        let todo = todos.removeAtIndex(sourceIndexPath.row)
+        todos.insert(todo, atIndex: destinationIndexPath.row)
     }
     
     // 设置了DetailViewController中的按钮返回方法，注意：必须在故事板中进行手工segue的绑定
@@ -93,16 +103,22 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         tableView.reloadData()
     }
     
-    /*
+    // 设置调用segue的准备工作，包括传递todo参数的任务
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        // 有两个segue，检查是否是编辑状态，负责就是新增
         if segue.identifier == "TodoEdit" {
+            
+            // 取出新ViewController的指针，为了在两个ViewController之间传递参数todo
             let vc = segue.destinationViewController as! DetailViewController
+            
+            // 注意，indexPathForSelectedRow的老版本是一个函数，新版本成了一个变量
             let indexPath = tableView.indexPathForSelectedRow
             if let index = indexPath {
                 vc.todo = todos[index.row]
             }
         }
+        
     }
-    */
+    
 }
 

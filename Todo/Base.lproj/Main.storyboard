@@ -60,7 +60,7 @@
                     <navigationItem key="navigationItem" title="待办列表" id="gqV-Ki-Me7">
                         <barButtonItem key="rightBarButtonItem" title="新增" id="WZI-ED-yaP">
                             <connections>
-                                <segue destination="Fg7-AF-Oox" kind="push" identifier="TodoEdit" id="haO-Bl-YmW"/>
+                                <segue destination="Fg7-AF-Oox" kind="push" identifier="" id="haO-Bl-YmW"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
@@ -193,6 +193,6 @@
         <image name="travel-selected" width="50" height="50"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="tu1-72-MER"/>
+        <segue reference="haO-Bl-YmW"/>
     </inferredMetricsTieBreakers>
 </document>
