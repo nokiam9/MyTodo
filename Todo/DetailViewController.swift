@@ -26,13 +26,20 @@ class DetailViewController: UIViewController, UITextFieldDelegate {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
+        
+        // 因为需要处理todoItem的键盘弹出事件，定义了两个函数，并说明实现方法就在本实例的定义中，而非AppDelegate.swift的文件中
         todoItem.delegate = self
         
+/*  -------------------
+        注意：设计思路是在两个View中间通过判断todo是否为空，来确定segue的后续动作是编辑，还是新增，但目前在处理搜索结果页时还存在bug
+-----------------------*/
         if todo == nil {                                        // 注：todo为空，说明是新增状态，否则就是编辑状态
             childButton.selected = true                         // 设置默认的动作图标
-            navigationItem.title = "新增事项"
+            navigationItem.title = "新建"
         }
         else {
+            navigationItem.title = "编辑"
+            
             if todo?.image == "child-selected" {
                 childButton.selected = true
             } else if todo?.image == "phone-selected" {
@@ -106,7 +113,7 @@ class DetailViewController: UIViewController, UITextFieldDelegate {
             image = "travel-selected"
         }
         
-        if todo == nil {        // 说明segue来自新增的动作
+        if todo == nil {
             // NSUUID是一个取出随机数ID的标准方法
             let uuid = NSUUID().UUIDString
             todo = TodoModel(id: uuid, image: image, title: todoItem.text!, date: todoDate.date)

@@ -11,6 +11,9 @@ import UIKit
 // 定义了全局变量todos，也就是本APP需要的运行数据库，是一个TodoModel的class数组
 var todos:[TodoModel] = []
 
+// 定义一个用于搜索的todos数组
+var filteredTodos: [TodoModel] = []
+
 // 自定义的一个方法，将指定格式的字符串转化为NSDate类型，为了初始化时给todos赋值方便
 func dateFromString(dateStr: String) -> NSDate? {
     let dateFormat = NSDateFormatter()
@@ -19,10 +22,11 @@ func dateFromString(dateStr: String) -> NSDate? {
     return dateFormat.dateFromString(dateStr)
 }
 
-class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchDisplayDelegate{
 
     @IBOutlet weak var tableView: UITableView!
-    
+    @IBOutlet weak var searchBar: UISearchBar!
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -35,6 +39,12 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         
         // 注意：这里设置了导航条左侧按钮为默认的Edit方式
         navigationItem.leftBarButtonItem = editButtonItem()
+        
+        // 启动时隐藏搜索框，但用户下拉时可见
+        // 注意：contentOffset时一个CGPoint的类型，包含x和y两个CGPoint变量，而frame包含了控件的框架结构信息
+        var contentOffset = tableView.contentOffset
+        contentOffset.y += self.searchDisplayController!.searchBar.frame.size.height
+        tableView.contentOffset = contentOffset
     }
 
     override func didReceiveMemoryWarning() {
@@ -47,14 +57,36 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         条件之二是必须在storyBoard中将指定tableView的控件和定义该dataSource方法的swift文件进行绑定，具体操作是按住ctrl，用鼠标连接tableView控件和ViewController控件（实际上，因为开始时已经将tableView控件与ViewController.swift进行了绑定，也就是@IBOutlet weak var tableView的语句左侧的标记），并在弹出窗口中选择dataSource（还有一个选项是delegate）
     */
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return todos.count
+        
+    /*  ----------------------------
+        注意：
+        1、编译时警告searchResultController在iOS8.0以后不支持，修改为searchController，但改名后报错不支持，怎么办呢！！！！
+        2、searchBar控件自带了一个searchResultTableView用于显示搜索结果数据，但本例中直接覆盖在tableView中，因此判断方法就是检查tableView 和self.searchDisplayController?.searchResultsTableView是否相同
+        3、但是本例中有一个bug，当搜索结果显示时，如果点击cell将调用segue打开detailViewController，但是todo的参数传递存在问题，不能准确判断原始View是来自searchResultTableView还是tableView，误判为新增todo，有时可转为编辑，但内容错行，目前尚未找到解决方案，因为第2点的方法似乎失效了！！！！
+        ---------------------------- */
+
+        // 判断当前tableView是否是搜索结果View
+        if tableView == self.searchDisplayController?.searchResultsTableView {
+            return filteredTodos.count
+        }
+        else {
+            return todos.count
+        }
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
         // 根据TableViewCell的Identifier参数（在故事板中手工设置），生成内存中的动态cell队列，列号信息在indexPath中
         let cell = self.tableView.dequeueReusableCellWithIdentifier("todoCell", forIndexPath: indexPath) as UITableViewCell
-        let todo = todos[indexPath.row] as TodoModel
+        
+        // 根据主表还是搜索结果表，导入相应cell的内容
+        var todo: TodoModel
+        if tableView == self.searchDisplayController?.searchResultsTableView {
+            todo = filteredTodos[indexPath.row]
+        }
+        else {
+            todo = todos[indexPath.row]
+        }
         
         // 根据TabelViewCell中的tag标记（在故事板中手工设置），依次取出cell中的各个控件
         let image = cell.viewWithTag(101) as! UIImageView
@@ -71,6 +103,11 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         date.text = dateFormat.stringFromDate(todo.date)
      
         return cell
+    }
+    
+    // 自定义设置cell的高度为80，为了解决搜索结果显示时高度为默认值44
+    func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+        return 80
     }
     
     // 设置删除模式，并设置了其动画效果
@@ -97,6 +134,15 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         todos.insert(todo, atIndex: destinationIndexPath.row)
     }
     
+    // 设置搜索模式
+    func searchDisplayController(controller: UISearchDisplayController, shouldReloadTableForSearchString searchString: String?) -> Bool {
+        
+        // 注意，todos.filer(){}是一个闭包，$0是指第一个入参，直接判断是否包含searchString，并返回Bool
+        filteredTodos = todos.filter(){$0.title.rangeOfString(searchString!) != nil}
+        
+        return true
+    }
+    
     // 设置了DetailViewController中的按钮返回方法，注意：必须在故事板中进行手工segue的绑定
     @IBAction func xclose(segue:UIStoryboardSegue) {
         NSLog("View will be closed!")
@@ -111,11 +157,18 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             // 取出新ViewController的指针，为了在两个ViewController之间传递参数todo
             let vc = segue.destinationViewController as! DetailViewController
             
-            // 注意，indexPathForSelectedRow的老版本是一个函数，新版本成了一个变量
+/*  -------------------------------------------
+    注意，indexPathForSelectedRow的老版本是一个函数，调用方法是tableView.indexPathForSelectedRow()
+    新版本成了一个只有get方法的闭包，只能通过tableView.indexPathForSelectedRow的方式调用
+---------------------------------------------*/
             let indexPath = tableView.indexPathForSelectedRow
             if let index = indexPath {
+/*  -------------------------------------------
+    注意，搜索结果的编辑bug就出在这里，因为不能准确区分调用todos，还是filterTodos
+---------------------------------------------*/
                 vc.todo = todos[index.row]
             }
+
         }
         
     }
