@@ -22,11 +22,11 @@ func dateFromString(dateStr: String) -> NSDate? {
     return dateFormat.dateFromString(dateStr)
 }
 
-class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchDisplayDelegate{
+class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchResultsUpdating{
 
     @IBOutlet weak var tableView: UITableView!
-    @IBOutlet weak var searchBar: UISearchBar!
-
+    var searchController: UISearchController!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -40,10 +40,27 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         // 注意：这里设置了导航条左侧按钮为默认的Edit方式
         navigationItem.leftBarButtonItem = editButtonItem()
         
+        searchController = UISearchController(searchResultsController: nil)
+        if searchController != nil {
+            searchController.searchResultsUpdater = self
+            
+            // 设置输入框的提示语
+            searchController.searchBar.placeholder = "Searching here ..."
+            
+            // 设置搜索结果是否可以选中，默认是true；考虑到数据可能被修改，最好还是用默认的不可修改状态
+            searchController.dimsBackgroundDuringPresentation = false
+            
+            // 设置搜索框为可见
+            tableView.tableHeaderView = searchController.searchBar
+        }
+        
         // 启动时隐藏搜索框，但用户下拉时可见
         // 注意：contentOffset时一个CGPoint的类型，包含x和y两个CGPoint变量，而frame包含了控件的框架结构信息
         var contentOffset = tableView.contentOffset
-        contentOffset.y += self.searchDisplayController!.searchBar.frame.size.height
+        
+        //contentOffset.y += self.searchDisplayController!.searchBar.frame.size.height
+        contentOffset.y += self.searchController.searchBar.frame.size.height
+        
         tableView.contentOffset = contentOffset
     }
 
@@ -66,12 +83,15 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         ---------------------------- */
 
         // 判断当前tableView是否是搜索结果View
+        /*
         if tableView == self.searchDisplayController?.searchResultsTableView {
             return filteredTodos.count
         }
         else {
             return todos.count
-        }
+        } */
+        
+        return searchController.active ? filteredTodos.count : todos.count
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
@@ -81,12 +101,16 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         
         // 根据主表还是搜索结果表，导入相应cell的内容
         var todo: TodoModel
+        
+        /*
         if tableView == self.searchDisplayController?.searchResultsTableView {
             todo = filteredTodos[indexPath.row]
         }
         else {
             todo = todos[indexPath.row]
-        }
+        } */
+        
+        todo = searchController.active ? filteredTodos[indexPath.row] : todos[indexPath.row]
         
         // 根据TabelViewCell中的tag标记（在故事板中手工设置），依次取出cell中的各个控件
         let image = cell.viewWithTag(101) as! UIImageView
@@ -134,6 +158,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         todos.insert(todo, atIndex: destinationIndexPath.row)
     }
     
+    /*-------此函数删除，改为searchController中需要定义的接口
     // 设置搜索模式
     func searchDisplayController(controller: UISearchDisplayController, shouldReloadTableForSearchString searchString: String?) -> Bool {
         
@@ -141,6 +166,14 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         filteredTodos = todos.filter(){$0.title.rangeOfString(searchString!) != nil}
         
         return true
+    }
+    --------*/
+    
+    // 定义searchController中需要的新方法
+    func updateSearchResultsForSearchController(searchController: UISearchController) {
+        let searchString = searchController.searchBar.text
+        filteredTodos = todos.filter(){$0.title.rangeOfString(searchString!) != nil}
+        tableView.reloadData()
     }
     
     // 设置了DetailViewController中的按钮返回方法，注意：必须在故事板中进行手工segue的绑定
@@ -165,8 +198,9 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             if let index = indexPath {
 /*  -------------------------------------------
     注意，搜索结果的编辑bug就出在这里，因为不能准确区分调用todos，还是filterTodos
+    Note：现在用searchController.active可以准确判断了，但是为保险起见，还是设置搜索结果不可选择吧
 ---------------------------------------------*/
-                vc.todo = todos[index.row]
+                vc.todo = searchController.active ? filteredTodos[index.row] : todos[index.row]
             }
 
         }
