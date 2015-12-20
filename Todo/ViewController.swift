@@ -179,32 +179,36 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     // 设置了DetailViewController中的按钮返回方法，注意：必须在故事板中进行手工segue的绑定
     @IBAction func xclose(segue:UIStoryboardSegue) {
         NSLog("View will be closed!")
+        
+        // 为搜索结果显示的返回处理
+        searchController.searchBar.text = ""
         tableView.reloadData()
     }
     
     // 设置调用segue的准备工作，包括传递todo参数的任务
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // 有两个segue，检查是否是编辑状态，负责就是新增
+        // 取出新ViewController的指针，为了在两个ViewController之间传递参数todo
+        let vc = segue.destinationViewController as! DetailViewController
+
+        // 有两个segue，检查是否是编辑状态，否则就是新增
         if segue.identifier == "TodoEdit" {
-            
-            // 取出新ViewController的指针，为了在两个ViewController之间传递参数todo
-            let vc = segue.destinationViewController as! DetailViewController
-            
 /*  -------------------------------------------
     注意，indexPathForSelectedRow的老版本是一个函数，调用方法是tableView.indexPathForSelectedRow()
     新版本成了一个只有get方法的闭包，只能通过tableView.indexPathForSelectedRow的方式调用
 ---------------------------------------------*/
-            let indexPath = tableView.indexPathForSelectedRow
-            if let index = indexPath {
+            if let indexPath = tableView.indexPathForSelectedRow {
 /*  -------------------------------------------
     注意，搜索结果的编辑bug就出在这里，因为不能准确区分调用todos，还是filterTodos
     Note：现在用searchController.active可以准确判断了，但是为保险起见，还是设置搜索结果不可选择吧
 ---------------------------------------------*/
-                vc.todo = searchController.active ? filteredTodos[index.row] : todos[index.row]
+                vc.todoDetailMode = searchController.active ? TodoDetailMode.View : TodoDetailMode.Edit
+                vc.todo = searchController.active ? filteredTodos[indexPath.row] : todos[indexPath.row]
             }
-
         }
-        
+        else {
+            vc.todoDetailMode = TodoDetailMode.New
+            vc.todo = nil
+        }
     }
     
 }

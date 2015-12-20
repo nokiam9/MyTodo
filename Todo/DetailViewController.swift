@@ -8,6 +8,12 @@
 
 import UIKit
 
+enum TodoDetailMode : Int {
+    case New
+    case Edit
+    case View
+}
+
 class DetailViewController: UIViewController, UITextFieldDelegate {
 
     @IBOutlet weak var childButton: UIButton!
@@ -15,12 +21,12 @@ class DetailViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var shoppingCartButton: UIButton!
     @IBOutlet weak var travelButton: UIButton!
     
-    
     @IBOutlet weak var todoItem: UITextField!
     @IBOutlet weak var todoDate: UIDatePicker!
     
     // 注意：设置todo变量是为了在两个View中间传递参数，此处是一个class的指针，而不是真实的数据，因此可以直接修改todos的数据
     var todo: TodoModel?
+    var todoDetailMode: TodoDetailMode = TodoDetailMode.New
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,26 +39,33 @@ class DetailViewController: UIViewController, UITextFieldDelegate {
 /*  -------------------
         注意：设计思路是在两个View中间通过判断todo是否为空，来确定segue的后续动作是编辑，还是新增，但目前在处理搜索结果页时还存在bug
 -----------------------*/
-        if todo == nil {                                        // 注：todo为空，说明是新增状态，否则就是编辑状态
-            childButton.selected = true                         // 设置默认的动作图标
-            navigationItem.title = "新建"
-        }
-        else {
-            navigationItem.title = "编辑"
-            
-            if todo?.image == "child-selected" {
-                childButton.selected = true
-            } else if todo?.image == "phone-selected" {
-                phoneButton.selected = true
-            } else if todo?.image == "shopping-cart-selected" {
-                shoppingCartButton.selected = true
-            } else if todo?.image == "travel-selected" {
-                travelButton.selected = true
-            }
-            todoItem.text = todo?.title
-            todoDate.setDate((todo?.date)!, animated: false)
+        switch (todoDetailMode) {
+            case TodoDetailMode.New :               // 新增方式
+                navigationItem.title = "新建"
+                childButton.selected = true        // 设置默认的动作图标
+            case TodoDetailMode.Edit :
+                navigationItem.title = "编辑"
+            case TodoDetailMode.View :
+                navigationItem.title = "查看"
+/*  -------------------
+        注意：userInteractionEnabled是UIView的一个方法，说明是否响应用户事件，这里用来在View状态时不可编辑内容
+-----------------------*/
+                todoItem.userInteractionEnabled = false
+                todoDate.userInteractionEnabled = false
         }
         
+        todoItem.text = todo!.title
+        todoDate.setDate((todo!.date), animated: false)
+        
+        if todo?.image == "child-selected" {
+            childButton.selected = true
+        } else if todo?.image == "phone-selected" {
+            phoneButton.selected = true
+        } else if todo?.image == "shopping-cart-selected" {
+            shoppingCartButton.selected = true
+        } else if todo?.image == "travel-selected" {
+            travelButton.selected = true
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -80,23 +93,31 @@ class DetailViewController: UIViewController, UITextFieldDelegate {
     }
     
     @IBAction func childTapped(sender: AnyObject) {
-        resetButtons()
-        childButton.selected = true
+        if todoDetailMode != TodoDetailMode.View {
+            resetButtons()
+            childButton.selected = true
+        }
     }
     
     @IBAction func phoneTapped(sender: AnyObject) {
-        resetButtons()
-        phoneButton.selected = true
+        if todoDetailMode != TodoDetailMode.View {
+            resetButtons()
+            phoneButton.selected = true
+        }
     }
     
     @IBAction func shoppingCartTapped(sender: AnyObject) {
-        resetButtons()
-        shoppingCartButton.selected = true
+        if todoDetailMode != TodoDetailMode.View {
+            resetButtons()
+            shoppingCartButton.selected = true
+        }
     }
     
     @IBAction func travelTapped(sender: AnyObject) {
-        resetButtons()
-        travelButton.selected = true
+        if todoDetailMode != TodoDetailMode.View {
+            resetButtons()
+            travelButton.selected = true
+        }
     }
     
     //  设置确定按钮的动作
@@ -113,18 +134,26 @@ class DetailViewController: UIViewController, UITextFieldDelegate {
             image = "travel-selected"
         }
         
-        if todo == nil {
+        switch (todoDetailMode) {
+        case TodoDetailMode.New :
             // NSUUID是一个取出随机数ID的标准方法
             let uuid = NSUUID().UUIDString
             todo = TodoModel(id: uuid, image: image, title: todoItem.text!, date: todoDate.date)
             todos.append(todo!)
-        }
-        else {
+        case TodoDetailMode.Edit :
             todo?.image = image
             todo?.title = todoItem.text!
             todo?.date = todoDate.date
+        case TodoDetailMode.View :
+            break
         }
     }
+    
+    /*  把文本输入框设置为不可编辑状态，这是另一种方法
+    func textFieldShouldBeginEditing(textField: UITextField) -> Bool { // return NO to disallow editing.
+        return todoDetailMode != TodoDetailMode.View
+    }
+    */
     
     // 在输入框中按下return时，收回键盘
     func textFieldShouldReturn(textField: UITextField) -> Bool {
